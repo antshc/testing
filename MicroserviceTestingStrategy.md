@@ -9,7 +9,7 @@
 * Developers should write unit tests for every new added class
 * Developers should write tests for existing classes, cover only new added logic
 * All interactions and collaborations between an object and its dependencies, should be replaced by test doubles (**Solitary unit testing**)
-* Using code coverege tool in Visual studio enterprise all class conditions should be cover
+* Using code coverege extension [FineCodeCoverage](https://github.com/FortuneN/FineCodeCoverage) in Visual studio to validate coverage 
 * Unit tests should be part of the story
 * if unit tests not possible to write because of business presure, tech dept task should be created with list of classes what doesn't cover with tests, PM should notified that tests should be written after releases as first priority
 
