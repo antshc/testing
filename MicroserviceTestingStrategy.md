@@ -67,7 +67,7 @@ Cover everithing what possible with unit tests
 
 ## Contract tests
 * Developers should cover internal microservices http clients [pact](https://github.com/pact-foundation/pact-net)
-* Developers should cover events contracts (library not found)
+* Developers should cover events contracts (library not found), [json scheme validator](https://github.com/RicoSuter/NJsonSchema) can be use 
 
 #### When to run
 * should run in independed pipeline when contract tests updated, all microservices should checkout to verify compatibility
