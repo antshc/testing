@@ -21,13 +21,14 @@ Unit tests is a type of software testing where individual units or components of
 ### Test Project
 * Test project should be closer to the project with logic
 * Folder structure of your tests should reflect structure of projects and their classes under tests.
+
 $$$$$Test Project structure image$$$$$$
-https://github.com/Moq/moq4/wiki/Quickstart#customizing-mock-behavior
+
 ### Unit Test Class
 Use the following rules when creating or modifying unit test class.
 #### Test Class Signature
-* Name your newly created test class in format <NameOfClassToBeTested>Tests.
-* Derive your unit test class from **BaseUnitTests*** 
+* Name your newly created test class in format NameOfClassToBeTestedTests.
+* Derive your unit test class from **BaseUnitTests**
 ```csharp
 public class NameOfClassToBeTestedTests : BaseUnitTests
 ```
