@@ -1,4 +1,12 @@
 # Testing
+## Configure tools
+### Install [FineCodeCoverage](https://github.com/FortuneN/FineCodeCoverage) extension to visual studio
+### Add tool from view
+<img src="https://user-images.githubusercontent.com/14298158/152655447-a501a796-1991-4b5a-8b7c-2d5e00ad311c.png"  width="300px"/>
+
+### Validate code coverage of your tests
+<img src="https://user-images.githubusercontent.com/14298158/152655574-7c151f01-3e6d-49aa-bac5-8d02933f3fb9.png" width="300px"/>
+
 ## Libraries
 * Fake data generator [Bogus](https://github.com/bchavez/Bogus)
 * Create mocks [Moq](https://github.com/moq/moq4)
