@@ -3,7 +3,7 @@
 * E2E tests should be write by Automation test engineers
 * Developers should support  Automation test engineer with tools for mocking and test data setup
 
-<img src="https://github.com/khdevnet/testing/blob/master/docs/test-pyramid.png" width="200">
+<img src="https://github.com/khdevnet/testing/blob/main/docs/test-pyramid.png" width="200">
 
 ## Unit tests
 * Developers should write unit tests for every new added class
@@ -66,7 +66,8 @@ Cover everithing what possible with unit tests
 * Should run in PR gate before merge
 
 ## Contract tests
-* Developers should cover internal microservices clients [pact](https://github.com/pact-foundation/pact-net)
+* Developers should cover internal microservices http clients [pact](https://github.com/pact-foundation/pact-net)
+* Developers should cover events contracts (library not found)
 
 ### When to run
 * should run in independed pipeline when contract tests updated, all microservices should checkout to verify compatibility
