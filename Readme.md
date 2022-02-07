@@ -1,4 +1,4 @@
-# Microservice test strategy
+# Microservice test theory
 <img src="https://github.com/khdevnet/testing/blob/main/docs/test-pyramid.png" width="200">
 
 ## Unit tests
