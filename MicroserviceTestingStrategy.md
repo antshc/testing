@@ -50,10 +50,16 @@ Cover everithing what possible with unit tests
 
 ## Component tests
 #### In process component tests
-* Developers should mock everything inside controller
-
+In microservices architecture component can be a single microservice itself. 
+* Developers should mock all external dependency (Database, External API)
+ 
 #### What to cover
+* Cover Responses of the component from API perspective
+
+Note: In process controllers component tests
+* Developers should mock everything inside controller
 * Developers should cover authorization attributes and claims
+* Developers should cover model validation and binding
 * Developers should cover everyhing what impossible to cover using Unit Tests
 
 #### Out of process component tests
