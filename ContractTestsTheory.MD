@@ -1,5 +1,3 @@
-[[_TOC_]]
-
 # Problem
 * We have 4 teams and plan to grow, it's already hard to control what changes were made by other teams, what can be broken because of this
 * When the contract changes, How to you understand if other microservice continue to work as expected?
@@ -44,6 +42,13 @@ Messaging pacts work similarly to synchronous request/response pacts in that the
 ## Api contract tests
 The consumer defines the HTTP message payload (URL, headers, request, response ...) contract it expects to receive and the producer is verified to ensure that the HTTP payload it produces meets those expectations.
 [Api Pacts](https://github.com/pact-foundation/pact-net)
+
+
+# Run automatically
+* Consumer1 and Consumer2 build pipeline generates schemas and publish them as an artifact
+* Producer download messages schemas from pipeline artifact and run tests using them
+![Contract tests pipelines drawio](https://user-images.githubusercontent.com/14298158/173375359-35c75304-fc86-4b95-abec-0b88a961c7af.png)
+
 
 # Resources
 * [Pact Learning](https://github.com/DiUS/pact-workshop-dotnet-core-v3/blob/master/LEARNING.md)
