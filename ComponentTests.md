@@ -3,92 +3,286 @@
 # Prequesities
 * [Martin Fowler Component tests](https://martinfowler.com/articles/microservice-testing/#testing-component-introduction)
 * [Web Test Server](https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-6.0)
+* [gherkin cucumber Given When Then](https://cucumber.io/docs/gherkin/reference/)
 
-# In process component tests concept
-* Mock or replace external dependencies
-* Run tests using an in-memory database or EF Core In-memory provider
+# Main concepts
+* Mock or replace external API dependencies using wiremock.net
+* Run tests using  mocks in the docker container (database, blob storage, etc..)
+* Run tests using mocks in the docker container
 * Write tests for Controllers, IntegrationMessageHandlers
+* Each test should create a unique entity with a unique id, we do operations on it, but do not clean it after the test is finished (will be removed during docker disposal)
 * Test should be intended and run in parallel 
+* Use CollectionFixture for databases (should limit the amount of simultaneously run containers, because of issues in azure pipelines)
 
 # Conventions
 
 ## Project structure
 
 ```
-|- Clients # RestEase http Clients
+|- Core # fremowork extensions
+|-- TestWebApplicationFactory
+|- Clients # RestEase HTTP Clients
+|- IForgotPasswordClient
+|- IRegistrationClient
 |- Configurations
-|-- TestingConfiguration.cs # App configuration settings
+|-- AzureAppConfiguration.cs # App configuration settings
 |-- TestingHostStartup.cs # Override for WebHost configuration
-|- Controllers
-|-- ControllerName # Controller under test
-|--- GetProducts.cs # Action under test HttpMethod + UrlPart in pascal Case
-|--- PostProducts.cs # Action under test HttpMethod + UrlPart in pascal Case 
+|- Features
+|-- Api # Controller under test
+|--- Registration.cs # Action under test HttpMethod + UrlPart in pascal Case
+|--- Registration_steps.cs # Action under test HttpMethod + UrlPart in pascal Case 
 |- IntegrationMessageHandlers # External message handlers
 |-- CreateCustomerMessageHandler
 |- BaseComponentTest.cs # base class for component
 ```
 
-## Controller action test class structure
-```
-public class GetProducts : BaseComponentTest
+## Feature scenarios class
+```csharp
+[FeatureDescription(@"Customer can register in our system after phone verification")]
+[Collection(nameof(MsSqlDbContainer))]
+public class Registration : BaseComponentTest
 {
-    public GetVehiclesOnSale(WebApplicationFactory<Program> builder, ITestOutputHelper testOutputHelper)
-        : base(builder, testOutputHelper)
+    private readonly DbContainer _dbContainer;
+    private readonly TestCustomer _testCustomer
+    = new AutoFaker<TestCustomer>()
+        .RuleFor(c => c.Id, f => f.Random.Guid())
+        .RuleFor(c => c.Name, f => f.Name.FirstName())
+        .Generate();
+
+    public Registration(DbContainer dbContainer, ITestOutputHelper testOutputHelper)
+        : base(dbContainer, testOutputHelper) => _dbContainer = dbContainer;
+
+    [Scenario]
+    public async Task Customer_registered_successfully()
     {
+        await RunScenarioAsync<Registration_steps>(
+             _ => _.Given_customer_with_id_ID_not_exist(_testCustomer.Id),
+             _ => _.Given_crm_proxy_api_add_endpoint_mock_exists(_testCustomer),
+             _ => _.Given_CustomerRegisteredEvent_topic_mock_exists(),
+             _ => _.When_customer_start_registration(_testCustomer),
+             _ => _.Then_response_is_ok(),
+             _ => _.When_customer_start_phone_verification(_testCustomer.Phone.Value),
+             _ => _.Then_response_is_ok(),
+             _ => _.When_customer_verify_phone_number_sucessfully(_testCustomer.Phone.Value),
+             _ => _.Then_response_is_ok(),
+             _ => _.Then_CustomerRegisteredEvent_is_sent(_testCustomer),
+             _ => _.Then_customer_created_in_crm(_testCustomer),
+             _ => _.Then_user_created_in_identity_server(_testCustomer),
+             _ => _.Then_customer_fields_in_database_matched(_testCustomer)
+          );
     }
 
-    [Fact]
-    public async Task When_has_subscriptions_Expect_subscriptions()
-    {
-        # Arrange/Actual/Assert
-    }
+    protected override object CreateFeatureContext(IDependencyResolver x)
+               => new Registration_steps(App, RegistrationClient);
+}
 ```
 
 ## BaseComponentTest
-* use IClassFixture<WebApplicationFactory<Program>>
-* use extensions from ServicesTestFramework.WebAppTools.Extensions if possible
+* should be used to initialize TestWebApplicationFactory
+* TestWebApplicationFactory will be initialized for each test (will reset mock setups)
+* should be used to create HTTP clients
+* should be used to set up behavior for global mocks
+* scenario-specific setup should be done in steps
 
-```
-public abstract class BaseComponentTest : IClassFixture<WebApplicationFactory<Program>>
+```csharp
+public abstract class BaseComponentTest :
+    FeatureFixture,
+    IDisposable
 {
-    private static InMemoryDatabaseRoot _inMemoryDatabaseRoot { get; } = new InMemoryDatabaseRoot();
+    public readonly Guid CustomerId = Guid.Parse("1d925d66-e115-4d54-84cb-91396d8fb781");
 
-    protected WebApplicationFactory<Program> ApiFactory { get; }
-
-    protected readonly CustomerContext Db;
-
-    protected BaseComponentTest(WebApplicationFactory<Program> webAppFactory, ITestOutputHelper testOutputHelper = null!)
+    protected BaseComponentTest(DbContainer dbContainer, ITestOutputHelper? testOutputHelper = null)
     {
-        ApiFactory = webAppFactory
-            .WithWebHostBuilder(builder =>
-            {
-                builder.UseContentRoot(AppContext.BaseDirectory);
-                builder.ConfigureTestServices(services =>
-                {
-                    // Replace IndetyServer Authentication with mock auth
-                    services.AddMockAuthentication(JwtBearerDefaults.AuthenticationScheme);
-                    // Replace Azure service bus send requests classes
-                    services.Swap(new Mock<ServiceBusClient>().Object);
-                    services.Swap(new Mock<IBus>().Object);
-                    services.Swap(new Mock<IMessageEntityCreationService>().Object);
-                    services.SwapDbContext<CustomerContext>(builder => builder.UseInMemoryDatabase(nameof(CustomerContext), _inMemoryDatabaseRoot));
-                    if (testOutputHelper is not null)
-                    {
-                        services.AddLogging(logBuilder => logBuilder.AddXUnit(testOutputHelper));
-                    }
-                });
-            });
+        App = new TestWebApplicationFactory(dbContainer, testOutputHelper);
 
-        Db = ApiFactory.Services.GetScopedService<CustomerContext>();
+        App.ContactRepositoryMock
+            .Setup(u => u.Get(It.IsAny<ContactSpecification>()))
+            .Returns(Task.FromResult(new ContactEntity { CustomerId = CustomerId }));
+
+        App.ContactVerificationMock
+            .Setup(c => c.Verify(It.IsAny<VerificationPhoneWithCode>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VerificationResult(true, 0));
+
+        App.IdentityServerClientMock
+            .Setup(i => i.LoginOnBehalfOfUser(It.IsAny<UserCredentials>(), null, null, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(
+                          new AccessAndRefreshToken(FakeToken.WithJwtId(CustomerId).ToString().Split("Bearer ")[1],
+                             "refreshToken")));
+
+        Client = App.CreateClientWithLogger();
+
+        CustomersController = ControllerFor<ICustomersController>();
+        DbContainer = dbContainer;
     }
 
-    protected TController CreateClient<TController>() where TController : class
-    {
-        var httpClient = ApiFactory.CreateClient();
-        return httpClient.ClientFor<TController>();
-    }
+    public DbContainer DbContainer { get; }
+
+    protected TestWebApplicationFactory App { get; init; }
+
+    protected HttpClient Client { get; init; }
+
+    protected ICustomersController CustomersController { get; init; }
+...
 }
 ```
+## TestWebApplicationFactory
+* should be used to create a test web application
+* Mocks initialization should be there (setup behavior in tests)
+```csharp
+public class TestWebApplicationFactory : WebApplicationFactory<Program>
+{
+    private const string EnvironmentName = "Local";
+    private readonly DbContainer _dbContainer;
+    private readonly ITestOutputHelper? _testOutputHelper;
+
+    public TestWebApplicationFactory(
+        DbContainer dbContainer,
+        ITestOutputHelper? testOutputHelper = null)
+    {
+        WireMockServer = WireMockServer.Start();
+        _dbContainer = dbContainer;
+        _testOutputHelper = testOutputHelper;
+    }
+
+    public WireMockServer WireMockServer { get; init; }
+
+    public Mock<IBus> BusMock { get; init; } = new Mock<IBus>();
+
+    public Mock<IGuidProvider> GuidProviderMock { get; init; } = new Mock<IGuidProvider>();
+    // ...
+
+    public HttpClient CreateClientWithLogger() => CreateDefaultClient(new StepHttpLoggingHandler(new TestLogger<StepHttpLoggingHandler>()));
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        WireMockServer.Dispose();
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        SetTestOutputLogger(builder, _testOutputHelper);
+
+        builder.UseEnvironment(EnvironmentName);
+        builder.UseContentRoot(Directory.GetCurrentDirectory());
+        builder.ConfigureAppConfiguration(app =>
+        {
+            var testAppSettings = new List<KeyValuePair<string, string>>() {
+                        new("SqlDb:Customer:ConnectionString", _dbContainer.DbConnectionString),
+                        new("CustomerApi:CrmClient:BaseUrl", WireMockServer.Url),
+                        new("CustomerApi:CrmClient:Enabled", "true"),
+                    };
+
+            app.AddInMemoryCollection(new Dictionary<string, string>(testAppSettings));
+        });
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IDistributedCache>();
+            services.AddDistributedMemoryCache();
+
+            services.Swap(CustomerMetadataEnricherMock.Object);
+            services.Swap(ContactVerificationMock.Object);
+            // ... other Swap
+            services.AddMockAuthentication();
+        });
+    }
+```
+
+## TestData
+* Customers with suffix **Registered** will be existing customers who were created during the database initialization and could be used to test read logic or scenarios where customers predefined, will contain static data
+* customers with suffix **Random** will be use to generate random customer, will contain random data
+
+```csharp
+internal static class TestCustomers
+{
+    public static TestCustomer RegisteredJohn{ get; } = GenerateRandomCustomer();
+
+    public static TestCustomer RegisteredDoe { get; } = GenerateRandomCustomer();
+
+    public static TestCustomer RandomCustomer1 { get; } = GenerateRandomCustomer();
+
+    public static TestCustomer RandomCustomer2 { get; } = GenerateRandomCustomer();
+
+    public static TestCustomer CustomerEmailNotVerified { get; } = GenerateRandomCustomer(emailVerified: false);
+
+    private static TestCustomer GenerateRandomCustomer(bool phoneVerified = true, bool emailVerified = true)
+        => new Faker<TestCustomer>()
+            .CustomInstantiator(f => new TestCustomer(
+                f.Random.Guid(),
+                f.PickRandom<CustomerType>(),
+                f.Name.FirstName(),
+                new TestCustomerContact(phoneVerified, RandomHelper.RandomPhoneNumber()),
+                new TestCustomerContact(emailVerified, f.Internet.Email()),
+                f.Address.FullAddress(),
+                1,
+                true))
+            .Generate();
+}
+
+public record TestCustomer(
+    Guid Id,
+    CustomerType CustomerType,
+    string Name,
+    TestCustomerContact Phone,
+    TestCustomerContact Email,
+    string Location,
+    int? TrafficSourceId,
+    bool PersonalDataProcessing);
+
+public record TestCustomerContact(bool IsVerified, string Value);
+```
+
+## Faker
+### Option 1 Use RuleFor
+pros: 
+* better visibility about which field setup
+
+```csharp
+new Faker<TestCustomer>()
+            .RuleFor(fake => fake.Id, fake => fake.Random.Guid())
+            .RuleFor(fake => fake.Name, fake => fake.Name.FirstName())
+            .RuleFor(fake => fake.Email, fake => new TestCustomerContact(emailVerified, fake.Internet.Email()))
+            .RuleFor(fake => fake.Location, fake => fake.Address.FullAddress())
+            .RuleFor(fake => fake.TrafficSourceId, fake => 1)
+            .RuleFor(fake => fake.PersonalDataProcessing, fake => true)
+            .RuleFor(fake => fake.Phone, fake => new TestCustomerContact(phoneVerified, RandomHelper.RandomPhoneNumber()))
+            .Generate();
+```
+
+### Option 2 use CustomInstantiator
+cons:
+* less readable code, not clear to what fields setup
+* should follow the order in the constructor 
+* optional parameters should be moved to the end
+```csharp
+new Faker<TestCustomer>()
+            .CustomInstantiator(f => new TestCustomer(
+                f.Random.Guid(),
+                f.PickRandom<CustomerType>(),
+                f.Name.FirstName(),
+                new TestCustomerContact(phoneVerified, RandomHelper.RandomPhoneNumber()),
+                new TestCustomerContact(emailVerified, f.Internet.Email()),
+                f.Address.FullAddress(),
+                1,
+                true))
+            .Generate();
+
+// Alternative, to improve readability is to use field names
+new Faker<TestCustomer>()
+            .CustomInstantiator(f =>
+                new TestCustomer(
+                    Id: f.Random.Guid(),
+                    CustomerType: f.PickRandom<CustomerType>(),
+                    Name: f.Name.FirstName(),
+                    Phone: new TestCustomerContact(phoneVerified, RandomHelper.RandomPhoneNumber()),
+                    Email: new TestCustomerContact(emailVerified, f.Internet.Email()),
+                    Location: f.Address.FullAddress(),
+                    TrafficSourceId: 1,
+                    PersonalDataProcessing: true))
+            .Generate();
+```
+
 # Mocks
 ### Mock identity server
 ```csharp
@@ -107,7 +301,7 @@ services.Swap(new Mock<IMessageEntityCreationService>().Object);
 ### Mock data provider
 ```csharp
 // Use In memory entity framework provider
-services.SwapDbContext<CustomerContext>(builder => builder.UseInMemoryDatabase(nameof(CustomerContext), _inMemoryDatabaseRoot));
+services.SwapDbContext<PersonalAccountContext>(builder => builder.UseInMemoryDatabase(nameof(PersonalAccountContext), _inMemoryDatabaseRoot));
 ```
 ### Log to test output
 ```csharp
@@ -116,8 +310,3 @@ if (testOutputHelper is not null)
    services.AddLogging(logBuilder => logBuilder.AddXUnit(testOutputHelper));
 }
 ```
-
-  
-# Out of process component tests
-* Use [WireMock.Net](https://github.com/WireMock-Net/WireMock.Net) to stub remote server
-* Use Database in docker conteiner using [Test conteiners](https://github.com/HofmeisterAn/dotnet-testcontainers)
