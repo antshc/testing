@@ -1,6 +1,7 @@
 [[_TOC_]]
 
 # Prequesities
+* [What to test](https://www.sisense.com/blog/rest-api-testing-strategy-what-exactly-should-you-test/)
 * [Martin Fowler Component tests](https://martinfowler.com/articles/microservice-testing/#testing-component-introduction)
 * [Web Test Server](https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-6.0)
 * [Wiremock.net](https://github.com/WireMock-Net/WireMock.Net/wiki/Request-Matching)
