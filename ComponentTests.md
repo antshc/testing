@@ -1,7 +1,6 @@
 [[_TOC_]]
 
 # Prequesities
-* **[Knowledge sharing session](https://vavacars-my.sharepoint.com/:v:/g/personal/sag_vava_cars/EcWmeDgcc2xEu9W0GhTJqtwBbQY5WYFIi4Tnb89aPuG6QA)**
 * [Martin Fowler Component tests](https://martinfowler.com/articles/microservice-testing/#testing-component-introduction)
 * [Web Test Server](https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-6.0)
 * [Wiremock.net](https://github.com/WireMock-Net/WireMock.Net/wiki/Request-Matching)
