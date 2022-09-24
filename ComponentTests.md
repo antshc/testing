@@ -1,8 +1,11 @@
 [[_TOC_]]
 
 # Prequesities
+* **[Knowledge sharing session](https://vavacars-my.sharepoint.com/:v:/g/personal/sag_vava_cars/EcWmeDgcc2xEu9W0GhTJqtwBbQY5WYFIi4Tnb89aPuG6QA)**
 * [Martin Fowler Component tests](https://martinfowler.com/articles/microservice-testing/#testing-component-introduction)
 * [Web Test Server](https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-6.0)
+* [Wiremock.net](https://github.com/WireMock-Net/WireMock.Net/wiki/Request-Matching)
+* [Bogus](https://github.com/bchavez/Bogus)
 * [gherkin cucumber Given When Then](https://cucumber.io/docs/gherkin/reference/)
 
 # Main concepts
@@ -34,9 +37,12 @@
 |- IntegrationMessageHandlers # External message handlers
 |-- CreateCustomerMessageHandler
 |- BaseComponentTest.cs # base class for component
+|- TestData # should be use to create reusable fake data
 ```
 
 ## Feature scenarios class
+* Add external system mocks setup Given steps first in the scenario, after add customer data mocks steps
+* Add external system mocks verify Then steps at the end of the scenario after the check of the response using the same order that was use in the Given setup mocks list
 ```csharp
 [FeatureDescription(@"Customer can register in our system after phone verification")]
 [Collection(nameof(MsSqlDbContainer))]
@@ -56,9 +62,9 @@ public class Registration : BaseComponentTest
     public async Task Customer_registered_successfully()
     {
         await RunScenarioAsync<Registration_steps>(
-             _ => _.Given_customer_with_id_ID_not_exist(_testCustomer.Id),
              _ => _.Given_crm_proxy_api_add_endpoint_mock_exists(_testCustomer),
              _ => _.Given_CustomerRegisteredEvent_topic_mock_exists(),
+             _ => _.Given_customer_with_id_ID_not_exist(_testCustomer.Id),
              _ => _.When_customer_start_registration(_testCustomer),
              _ => _.Then_response_is_ok(),
              _ => _.When_customer_start_phone_verification(_testCustomer.Phone.Value),
@@ -188,6 +194,82 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 ```
+## Mocked class verification
+### Setup
+```csharp
+ IdentityServerClientMock.Setup(i => i.LoginOnBehalfOfUser(It.IsAny<UserCredentials>()).Returns(Task.Completed)
+```  
+### Verify
+* use It.Is<CustomerRegisteredEvent>() with strict conditions, for random data use conditions (<>) CusotmerId > 0, id != Guid.Empty 
+```csharp
+ IdentityServerClientMock.Verify(i => i.LoginOnBehalfOfUser(It.Is<UserCredentials>()).Returns(Task.Completed)
+```  
+
+## Service bus message verification
+### Setup
+
+```csharp
+    public Task Given_CustomerRegisteredEvent_topic_mock_exists()
+    {
+        _capturedRegisteredEventMessages = new List<CustomerRegisteredEvent>();
+        _busMock.Setup(x => x.Publish(Capture.In(_capturedRegisteredEventMessages), It.IsAny<string>(), It.IsAny<CancellationToken>()));
+
+        return Task.CompletedTask;
+    } 
+```
+### Verify
+* use It.Is<CustomerRegisteredEvent>() with strict conditions, for random data use conditions (<>) CusotmerId > 0, id != Guid.Empty 
+* log captured events in light bdd comments
+```csharp
+    public Task Then_CustomerRegisteredEvent_is_sent(TestCustomer testCustomer)
+    {
+        _capturedRegisteredEventMessages.Log(); // add light bdd comments
+
+        _busMock.Verify(
+            x => x.Publish(
+                ValidateCustomerRegisteredEvent(testCustomer),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once());
+
+        return Task.CompletedTask;
+    }
+```
+
+## External API request verification (Wiremock.net)
+### Setup
+* setup in scenario step
+* setup full request, make it strict as possible
+```csharp
+    public Task Given_crm_proxy_api_update_endpoint_mock_exists(TestCustomer testCustomer)
+    {
+        _wireMockServer.Given(Request.Create()
+                               .UsingPut()
+                               .WithPath(CrmCustomerUpdateEndpoint)
+                               .WithBody((body) => VerifyCrmRequestBody(testCustomer, body)))
+                       .RespondWith(WireMock.ResponseBuilders.Response.Create().WithStatusCode(HttpStatusCode.OK));
+
+        return Task.CompletedTask;
+    }
+
+```
+
+### Verify
+* verify that request was sent
+* reuse condition what was use on setup
+```csharp
+  public Task Then_customer_updated_in_crm(TestCustomer testCustomer)
+    {
+        _wireMockServer.FindLogEntries(Request.Create()
+                               .UsingPut()
+                               .WithPath(CrmCustomerUpdateEndpoint)
+                               .WithBody((body) => VerifyCrmRequestBody(testCustomer, body)))
+                       .Should()
+                       .NotBeEmpty();
+
+        return Task.CompletedTask;
+    }
+```
 
 ## TestData
 * Customers with suffix **Registered** will be existing customers who were created during the database initialization and could be used to test read logic or scenarios where customers predefined, will contain static data
@@ -234,9 +316,10 @@ public record TestCustomerContact(bool IsVerified, string Value);
 ```
 
 ## Faker
-### Option 1 Use RuleFor
-pros: 
+### Option Use RuleFor
+the purpose is to init properties
 * better visibility about which field setup
+* fields could be setup in random order
 
 ```csharp
 new Faker<TestCustomer>()
@@ -250,8 +333,9 @@ new Faker<TestCustomer>()
             .Generate();
 ```
 
-### Option 2 use CustomInstantiator
-cons:
+### Option use CustomInstantiator
+the purpose of this method is to allow you to configure how the instance is created (when init only through constructor or partially from the constructor)
+cons of using it everywhere:
 * less readable code, not clear to what fields setup
 * should follow the order in the constructor 
 * optional parameters should be moved to the end
@@ -282,7 +366,12 @@ new Faker<TestCustomer>()
                     PersonalDataProcessing: true))
             .Generate();
 ```
-
+## Light Bdd Table.For() TBDD
+Note: do not display in azure devops test case, need extension of Test case importer 
+```csharp
+ public Task Given_crm_proxy_api_add_endpoint_mock_exists(InputTable<TestCustomer> testCustomer)
+    {}
+```
 # Mocks
 ### Mock identity server
 ```csharp
