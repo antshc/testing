@@ -28,7 +28,9 @@ Cover everithing what possible with unit tests
 * Measure code coverage using [Visual studio test task](https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/test/vstest?view=azure-devops)
 * Setup baseline for test coverage and revision condition each month
 
-## Integration tests
+## Integration tests (test only integration)
+Note: after using of this approach, was decide to use component tests with Wiremock + database in docker, 
+because it hard to control that all integration is covered
 * Developers should write integration tests for every new added repository class
 * Developers should write integration tests for existing classes, cover only new added logic
 * Setup test data using SQL or EF queries
@@ -77,6 +79,15 @@ Note: In process controllers component tests
 
 #### When to run
 * should run in independed pipeline when contract tests updated, all microservices should checkout to verify compatibility
+
+
+## E2E tests (integrations+configurations testing)
+Test that application started and run
+* Test database health check
+* Test External system HttpClient (call health checks) 
+Test short smoke
+* Test a simple short smoke
+
 
 ## Resources
 [microservice-testing](https://martinfowler.com/articles/microservice-testing/)
