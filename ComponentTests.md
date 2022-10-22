@@ -82,6 +82,43 @@ public class Registration : BaseComponentTest
                => new Registration_steps(App, RegistrationClient);
 }
 ```
+## Reuse steps in the scenario
+* should be used for sharing steps for similar scenarios
+* all steps will be displayed in the output result and report
+```csharp
+    public Task<CompositeStep> When_customer_do_registration_with_kyc_verification_scenario(TestCustomer testCustomer)
+    {
+        return Task.FromResult(CompositeStep.DefineNew()
+            .WithContext(ctx => this)
+            .AddAsyncSteps(
+                 _ => _.Given_crm_proxy_api_add_endpoint_mock_exists(testCustomer),
+                 _ => _.Given_CustomerRegisteredEvent_topic_mock_exists(),
+                 _ => _.Given_sms_provider_api_send_endpoint_mock_exists(testCustomer),
+                 _ => _.Given_customer_with_id_ID_not_exist(testCustomer.Id),
+                 _ => _.When_kyc_customer_start_registration(testCustomer),
+                 _ => _.Then_response_is_ok(),
+                 _ => _.When_customer_start_phone_verification(testCustomer.Phone.Value),
+                 _ => _.Then_response_is_ok(),
+                 _ => _.When_customer_verify_phone_number_sucessfully(testCustomer.Phone.Value),
+                 _ => _.Then_response_is_ok())
+            .Build());
+    }
+```
+## Precondition steps in the scenario
+* should be used to set up precondition for the scenario
+* parent step will be displayed in the output result and report
+```csharp
+    public async Task Given_customer_without_kyc_verification_precondition(TestCustomer testCustomer)
+    {
+        await Given_crm_proxy_api_add_endpoint_mock_exists(testCustomer);
+        await Given_CustomerRegisteredEvent_topic_mock_exists();
+        await Given_sms_provider_api_send_endpoint_mock_exists(testCustomer);
+        await Given_customer_with_id_ID_not_exist(testCustomer.Id);
+        await When_customer_start_registration(testCustomer);
+        await When_customer_start_phone_verification(testCustomer.Phone.Value);
+        await When_customer_verify_phone_number_sucessfully(testCustomer.Phone.Value);
+    }
+```
 
 ## BaseComponentTest
 * should be used to initialize TestWebApplicationFactory
