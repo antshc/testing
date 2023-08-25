@@ -29,13 +29,11 @@ Cover everithing what possible with unit tests
 * Setup baseline for test coverage and revision condition each month
 
 ## Integration tests (test only integration)
-Note: after using of this approach, was decide to use component tests with Wiremock + database in docker, 
-because it hard to control that all integration is covered
-* Developers should write integration tests for every new added repository class
-* Developers should write integration tests for existing classes, cover only new added logic
+* Developers should write integration tests for every newly added repository class
+* Developers should write integration tests for existing classes, covering only newly added logic
 * Setup test data using SQL or EF queries
-* Each test should setup and cleanup test data
-* Tests should support run in paralell
+* Each test should set and clean test data
+* Tests should support running in paralell
 
 #### What to cover
 * Repositories
@@ -46,14 +44,14 @@ because it hard to control that all integration is covered
 * It should test migrations when merge to develop env
 
 #### Database test double
-* Make backup latest copy of database and remove redundant data
+* Make a backup latest copy of the database and remove redundant data
 * Run database in docker container using tmpfs (in memory storage)
-* Before start an integration test run docker inside test using docker client and stop it after
+* Before starting an integration test run docker inside test using docker client and stop it after
 
 ## Component tests
 #### In process component tests
-In microservices architecture component can be a single microservice itself. 
-* Developers should mock all external dependency (Database, External API)
+In microservices architecture, a component can be a single microservice itself. 
+* Developers should mock all external dependencies (Database, External API)
  
 #### What to cover
 * Cover Responses of the component from API perspective
