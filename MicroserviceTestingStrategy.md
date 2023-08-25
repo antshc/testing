@@ -72,8 +72,10 @@ Note: In process controllers component tests
 * Should run in PR gate before the merge
 
 ## Contract tests
+
 * Developers should cover internal microservices http clients [pact](https://github.com/pact-foundation/pact-net)
-* Developers should cover events contracts, [McVerifier](https://github.com/khdevnet/mc-verifier) can be used 
+* Developers should cover events contracts, [pact messaging](https://github.com/pact-foundation/pact-net/tree/master/samples/OrdersApi) can be used 
+
 
 #### When to run
 * should run in an independent pipeline when contract tests are updated, all microservices should check to verify compatibility
