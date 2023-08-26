@@ -1,5 +1,6 @@
 # Microservice test strategy
-* Test cases should be prepared by Automation QA but, Component and contract tests should be written by developers and reviewed by QAs. 
+* Test cases should be prepared by Automation QA but, Component and contract tests should be written by developers and reviewed by QAs.
+* Component tests should simulate validation the same way a developer does during debugging, for example checking what data is sent in the event, what data is saved to the database, etc…
 * E2E tests should be written by developers.
 
 <img src="https://github.com/khdevnet/testing/blob/main/docs/test-pyramid.png" width="200">
