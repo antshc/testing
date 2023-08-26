@@ -20,30 +20,33 @@
 * Integration tests runs manually during development and removes after
 
 ## Component tests
-#### Out of process component tests
+#### Out-of-process component tests
 In a microservices architecture, a component can be a single microservice itself. 
-* Use LightBDD testing framework to create human readable scenarios
+* Use LightBDD testing framework to create human-readable scenarios
 * Developers should mock external services HTTP clients using WireMock .NET
 * Use local database hosted in docker
-
-   
-
-#### Test Doubles & test run framework
 * Run tests using Microsoft Test server [integration testing framework](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-7.0).
-* Use in-memory Entity framework for database
-* Use Moq for other dependencies
-
+* Use in-memory mock for message bus. 
 #### What to cover
-##### Test request validations and Authentication attributes
+* Cover manual test scenarios with tests
+   
+#### In-process component tests
 * Developers should mock everything inside the controller
 * Developers should cover authorization attributes and claims
 * Developers should cover model validation and binding
-
-##### Test business logic with in-memory mocks
-* Write tests for each controller that tests business logic. 
+#### What to cover
+* Test request validations and Authentication attributes
 
 #### When to run
-* should run in PR gate pipeline
+* should run in the PR gate pipeline
+
+## Contract tests
+* Developers should cover internal microservices http clients [pact](https://github.com/pact-foundation/pact-net)
+* Developers should cover events contracts, [pact messaging](https://github.com/pact-foundation/pact-net/tree/master/samples/OrdersApi) can be used 
+
+
+#### When to run
+* should run in an independent pipeline, all microservices should check to verify compatibility
 
 ## E2E tests (integrations+configurations testing)
 Test that the application started and run
