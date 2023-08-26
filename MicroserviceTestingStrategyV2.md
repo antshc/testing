@@ -15,10 +15,10 @@
 * Tests optional, could be written to run manually to check that integration works
 #### What to cover
 * Integration with external dependencies
-* * Repositories (Manual run test)
-* HTTP Clients (Manual run test)
+* Repositories
+* HTTP Clients
 #### When to run
-* Run locally, runs manually during development and are removed after
+* Run locally, run manually during development, and remove after
 
 ## Component tests
 #### Out-of-process component tests
@@ -30,7 +30,7 @@ In a microservices architecture, a component can be a single microservice itself
 * Use in-memory mock for message bus.
   
 #### What to cover
-* Cover manual test scenarios with tests
+* Automate manual test scenarios
 
 #### When to run
 * Run in the pipeline
@@ -44,7 +44,7 @@ In a microservices architecture, a component can be a single microservice itself
 * Test request validations and Authentication attributes
 
 #### When to run
-* should run in the PR gate pipeline
+* should run in the pipeline
 
 ## Contract tests
 * Developers should cover internal microservices HTTP clients [pact](https://github.com/pact-foundation/pact-net)
