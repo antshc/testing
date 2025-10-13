@@ -1,0 +1,132 @@
+= High-Cost Tests and High-Value Tests
+Noel Rappin, GOTO 2018 – Thesis Summary
+:toc:
+:sectnums:
+
+== Core Idea
+link:++https://www.youtube.com/watch?v=e8_YDUn5JZ4++[Video: High-Cost Tests vs High-Value Tests] Software tests—especially in test-driven development (TDD)—incur measurable *costs* and *benefits*.  
+To design an efficient testing strategy, developers must evaluate both across the lifecycle of the codebase.  
+Not all tests deliver equal value for their cost, and recognizing this distinction is critical for maintaining velocity and confidence in software delivery.
+
+== 1. The Dual Nature of Tests
+Tests serve two main purposes:
+
+* **Process and Design Tool** – In TDD, tests guide architecture and ensure cleaner abstractions.
+* **Validation Tool** – Tests detect regressions and provide confidence in code correctness.
+
+Because they impact both development *process* and *runtime*, their value and cost extend beyond a single phase of the project.
+
+== 2. Dimensions of Test Cost
+
+|===
+| Dimension | High-Cost Factors | High-Value Factors
+
+| Writing Cost
+| Time and mental effort to design, implement, debug tests
+| Improves code design clarity and understanding of requirements
+
+| Execution Cost
+| Every run adds time to CI; scales exponentially
+| Fast feedback loops enable continuous development flow
+
+| Maintenance Cost
+| Brittle tests that break often or require major rewrites
+| Stable, focused tests that are easy to update
+
+| Cognitive Cost
+| Future devs struggle to interpret or fix tests
+| Acts as living documentation of intent
+
+| Defect Prevention (Value)
+| -
+| Catches regressions before release, protects production
+
+| Design Feedback (Value)
+| -
+| Encourages modular, testable architecture (TDD benefit)
+
+| Refactoring Confidence (Value)
+| -
+| Enables fearless change and high developer confidence
+
+| Process Reliability (Value)
+| -
+| Consistent CI/CD pipelines and predictable releases
+|===
+
+Rappin identifies **four main cost factors**:
+
+. *Writing Cost* – Time to design, implement, and debug the test.
+. *Execution Cost* – Time the test adds to continuous integration or developer cycles.
+. *Maintenance Cost* – Time spent fixing broken or flaky tests.
+. *Comprehension Cost* – Time future developers spend understanding the test.
+
+Each test added to a suite increases cumulative cost exponentially over time.
+
+
+
+== 3. Dimensions of Test Value
+Tests provide **four main value sources**:
+
+. *Improved Code Design* – TDD enforces modular, testable components.
+. *Faster Local Validation* – Tests replace manual end-to-end verification steps.
+. *Safer Refactoring* – Confidence in modifying code without introducing regressions.
+. *Early Bug Detection* – Preventing production defects saves tangible business costs.
+
+However, not every test contributes equally to these value categories.
+
+== 4. Cost vs. Value Trade-offs
+Empirical observations show that:
+
+* *End-to-end tests* → **High-value but high-cost**  
+  Validate full workflows but are slow, fragile, and expensive to maintain.
+* *Unit tests* → **Low-cost and often high-value**  
+  Fast, focused, and resilient, offering high return per second.
+* *Integration tests* → **Mid-cost, mid-value**  
+  Balance accuracy with maintainability.
+
+=== Example: Inventory Management System Project
+|===
+| Test Type | Count | % of Total | Runtime | % of Runtime
+
+| System (E2E) Tests | 22 | 12% | ~13 seconds | 75%
+| Unit Tests | 119 | 88% | ~2 seconds | 25%
+|===
+
+→ The slowest 1% of tests consumed 40% of total runtime.
+
+== 5. Long-Term Implications
+A few slow tests can dominate the total cost of the test suite.  
+Optimizing test design provides *disproportionate benefits* over time.
+
+Over-reliance on end-to-end tests leads to:
+
+* Test suites too slow to run regularly
+* Fragile failures that reduce developer confidence
+* Decreased incentive to maintain or refactor tests
+
+== 6. Strategic Testing Philosophy
+Rappin advocates for a *strategic, not tactical* testing approach:
+
+* Favor *smaller, faster tests* that isolate business logic.
+* Minimize *slow, redundant end-to-end tests*—keep only those validating critical user paths.
+* Measure test cost in *developer time* (writing, running, maintaining).
+* Continuously reassess whether each test still provides value relative to its cost.
+
+He warns that complacency (“tests are just slow”) causes teams to:
+
+* Stop running full suites locally.
+* Lose trust in their coverage.
+* Abandon TDD benefits entirely.
+
+== 7. Conclusion
+> “The way to avoid a slow test suite is to avoid writing slow tests.”
+
+High-value tests emphasize clarity, speed, and stability.  
+High-cost tests should exist only when justified by unique business value.  
+A sustainable testing strategy balances *confidence* and *cost efficiency*.
+
+== Condensed Thesis Statement
+*Efficient testing lies in optimizing the ratio between value (confidence, defect prevention, design quality) and cost (time to write, run, and maintain).*  
+Teams should strategically limit high-cost end-to-end tests and maximize high-value, low-cost unit and integration tests to sustain development speed and product reliability.
+
