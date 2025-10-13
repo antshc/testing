@@ -1,0 +1,149 @@
+= Millisecond Full Stack Acceptance Tests
+:author: Aslak Hellesøy (GOTO 2019)
+:context: Development Team Analysis
+:revdate: 2025-10-13
+
+== Overview
+This document summarizes and extends the main theses from Aslak Hellesøy’s talk *“Millisecond Full Stack Acceptance Tests”* (GOTO 2019).  
+It translates the speaker’s key points into actionable insights for our development team, focusing on developer flow, feedback loops, and high-performance test architectures.
+
+== 1. The Lost “Flow” of Programming
+*Thesis:*  
+Modern development environments have grown overly complex, making it difficult for developers to reach the state of *flow* — a deep, joyful focus on coding.
+
+*Original Ideas:*
+- Toolchain complexity (Docker, Webpack, CI/CD) interrupts focus.
+- Flow requires *immediate feedback*, *clear progress*, and *control*.
+- Younger developers may never have experienced this “zone” due to latency in modern workflows.
+
+*Extended Insight:*  
+Optimize not just for build performance, but for *cognitive flow*.  
+Introduce the KPI **“time from code change to feedback.”**
+
+*Actions:*
+- Simplify local build pipelines.
+- Enable incremental builds and hot reloads.
+- Prioritize IDE responsiveness and fast-running local tests.
+
+== 2. Feedback Time Limits — The Human Constraint
+*Thesis:*  
+Developer productivity follows the same cognitive time thresholds that apply to UI users (Jakob Nielsen’s research).
+
+[cols="1,2"]
+|===
+| Threshold | Developer Feedback Equivalent
+| 0.1s | Feels instantaneous – ideal for unit or logic tests.
+| 1s | Thought remains uninterrupted – acceptable for small integration tests.
+| 10s | Attention drifts – flow breaks, context lost.
+|===
+
+*Extended Insight:*  
+Build pipelines and test suites should be designed with *feedback budgets*.
+
+*Actions:*
+- Keep the majority of tests under 1 second.
+- Schedule heavy end-to-end tests in separate pipelines (nightly or async).
+- Automate feedback metrics collection.
+
+== 3. The “Love–Hate” Test Pyramid
+*Thesis:*  
+Replace the traditional “Test Pyramid” with a “Love–Hate Pyramid.”  
+Focus on the developer’s emotional response to test performance, not its architectural layer.
+
+*Categories:*
+- **Love tests:** Fast, deterministic, easy to maintain.
+- **Hate tests:** Slow, flaky, costly to debug and run.
+
+*Extended Insight:*  
+Test ROI is emotional and practical — prioritize *joyful* feedback loops.
+
+*Actions:*
+- Categorize tests by *developer sentiment* and speed.
+- Reduce end-to-end tests to a minimal verification layer.
+- Introduce lightweight in-process acceptance tests with memory-backed stores.
+
+== 4. Testing for the Right Kind of Confidence
+*Thesis:*  
+Each test should produce a specific kind of confidence — not all at once.
+
+*Confidence Types:*
+1. Business Logic Confidence – Core rules and calculations.
+2. UI Confidence – Buttons and fields wired correctly.
+3. Platform Confidence – Cross-browser and cross-platform.
+4. Integration Confidence – External APIs behave correctly.
+5. Performance/Security Confidence – Load, latency, vulnerability.
+
+*Extended Insight:*  
+Split test suites by *confidence objective*. Don’t overload one test with multiple concerns.
+
+*Actions:*
+- Label test suites explicitly (e.g., `BusinessLogic.Tests`, `Integration.Stripe.Tests`).
+- Define expected confidence in test documentation.
+- Use domain-driven acceptance tests for core business rules.
+
+== 5. Eliminating I/O Boundaries for Speed
+*Thesis:*  
+Slow feedback arises from I/O: HTTP calls, DB queries, and UI rendering.  
+Tests can run in *milliseconds* if kept entirely within one process.
+
+*Optimization Sequence:*
+1. Remove WebDriver → Direct DOM actor.
+2. Remove HTTP → Direct domain calls.
+3. Replace DB → In-memory storage.
+4. Remove DOM → Direct domain API test.
+
+*Extended Insight:*  
+Design your system as *interchangeable Lego blocks* with clear interfaces.
+
+*Actions:*
+- Apply Clean Architecture or Onion layering to isolate domain logic.
+- Support alternate wiring for fast in-memory test runs.
+- Target sub-10ms test execution for most business logic.
+
+== 6. Actor Abstraction for Test Decoupling
+*Thesis:*  
+Introduce an *Actor* abstraction between the test and the system under test.  
+Actors represent how users interact with the system but can be implemented in multiple ways.
+
+*Benefits:*
+- Same scenario runs via UI, API, or direct domain injection.
+- Tests stay technology-agnostic and readable to stakeholders.
+- Enables true Behavior-Driven Development (BDD).
+
+*Extended Insight:*  
+The Actor becomes a switchboard for trading *confidence vs. speed*.
+
+*Actions:*
+- Create standardized `Actor` interfaces:
+  - `WebActor` – REST/HTTP layer.
+  - `DomainActor` – In-memory direct logic.
+  - `MockActor` – Simulated interactions.
+- Use Cucumber or xUnit test adapters to run the same scenario in multiple contexts.
+
+== 7. The Path to Developer Happiness
+*Thesis:*  
+Developer happiness results from fast, deterministic feedback and confidence in code.
+
+*Extended Insight:*  
+Developer experience is a first-class quality attribute, equal to performance or reliability.
+
+*Actions:*
+- Measure “time-to-confidence” per change.
+- Design tests for psychological flow.
+- Eliminate friction in the feedback pipeline.
+
+== 8. Actionable Takeaways for Our Team
+[cols="1,2,2"]
+|===
+| Area | Practical Action | Expected Impact
+| Test Design | Define clear “confidence goals” per suite | Reduced redundancy, better clarity
+| Architecture | Enforce contracts between components | Easier in-process test assembly
+| Tooling | Build fast in-memory test runners | Preserve developer flow
+| CI/CD | Track feedback latency metrics | Quantify DX improvements
+| Quality | Replace fragile UI tests with domain-level BDD | Higher trust, lower flakiness
+| Culture | Optimize for developer happiness | Sustainable productivity
+|===
+
+== Conclusion
+Fast, joyful testing is not about reducing coverage — it’s about *engineering for flow*.  
+By eliminating I/O, isolating confidence types, and optimizing developer experience, teams can achieve millisecond-level feedback and regain the *intrinsic joy* of programming.
