@@ -4,41 +4,36 @@ Dave Farley • GOTO 2016
 :toc: left
 :toclevels: 2
 
-= Acceptance Testing Guidelines
-Dave Farley • GOTO 2016
-:toc: left
-:toclevels: 2
-
 == Anti-Patterns in Acceptance Testing
 
-*Don’t* use **UI Record-and-Playback Systems**  
-*Don’t* Record-and-Playback production data. This has a role, but it is **NOT** Acceptance Testing.  
-*Don’t* dump production data into your test systems — instead, define the **absolute minimum data** required.  
-*Don’t* assume **Nasty Automated Testing Products™** will do what you need. Be sceptical.  
-Start with **your strategy** and evaluate tools against it.  
-*Don’t* have a **separate Testing/QA team** — quality is everyone’s responsibility.  
-Developers own Acceptance Tests!  
-*Don’t* let every test start and initialize the app.  
-Optimise for **Cycle-Time** — be efficient in using test environments.  
-*Don’t* include systems **outside your control** in your Acceptance Test scope.  
-*Don’t* put `wait()` instructions in tests hoping it will solve intermittency.
+* *Don’t* use **UI Record-and-Playback Systems**
+* *Don’t* Record-and-Playback production data — this has a role, but it is **NOT** Acceptance Testing.
+* *Don’t* dump production data into your test systems — instead, define the **absolute minimum data** required.
+* *Don’t* assume **Nasty Automated Testing Products™** will do what you need.  
+  Be sceptical and start with **your strategy**, then evaluate tools against it.
+* *Don’t* have a **separate Testing/QA team** — quality is everyone’s responsibility.  
+  Developers own Acceptance Tests!
+* *Don’t* let every test start and initialize the app.  
+  Optimise for **Cycle-Time** — be efficient in using test environments.
+* *Don’t* include systems **outside your control** in your Acceptance Test scope.
+* *Don’t* put `wait()` instructions in tests hoping it will solve intermittency.
 
 ---
 
 == Tricks for Success
 
-*Do* ensure that **developers own the tests**.  
-*Do* focus your tests on **“What” not “How”**.  
-*Do* think of your tests as **Executable Specifications**.  
-*Do* make acceptance testing part of your **Definition of Done**.  
-*Do* keep tests **isolated from one another**.  
-*Do* keep your tests **repeatable**.  
-*Do* use the **language of the problem domain** — adopt the DSL approach regardless of technology.  
-*Do* **stub external systems**.  
-*Do* test in **production-like environments**.  
-*Do* make instructions appear **synchronous at the test-case level**.  
-*Do* test for **any change**.  
-*Do* keep your tests **efficient**.
+* *Do* ensure that **developers own the tests**.  
+* *Do* focus your tests on **“What” not “How”**.  
+* *Do* think of your tests as **Executable Specifications**.  
+* *Do* make acceptance testing part of your **Definition of Done**.  
+* *Do* keep tests **isolated from one another**.  
+* *Do* keep your tests **repeatable**.  
+* *Do* use the **language of the problem domain** — adopt the DSL approach regardless of technology.  
+* *Do* **stub external systems**.  
+* *Do* test in **production-like environments**.  
+* *Do* make instructions appear **synchronous at the test-case level**.  
+* *Do* test for **any change**.  
+* *Do* keep your tests **efficient**.
 
 == Test Environment Types
 
