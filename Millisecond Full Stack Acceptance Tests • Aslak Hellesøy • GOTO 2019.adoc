@@ -7,6 +7,8 @@
 This document summarizes and extends the main theses from Aslak Hellesøy’s talk *“Millisecond Full Stack Acceptance Tests”* (GOTO 2019).  
 It translates the speaker’s key points into actionable insights for our development team, focusing on developer flow, feedback loops, and high-performance test architectures.
 
+image::docs/test-system-testable-layers.png[title="Testable Layers Architecture", alt="System Testable Layers Diagram", width=200]
+
 == 1. The Lost “Flow” of Programming
 *Thesis:*  
 Modern development environments have grown overly complex, making it difficult for developers to reach the state of *flow* — a deep, joyful focus on coding.
