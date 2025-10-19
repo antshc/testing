@@ -263,9 +263,25 @@ Leading organizations (e.g., LMAX) treat acceptance testing as part of *system d
 
 . **User-visible rules that impact money**, data or compliance	invoices, SLAs, legal, data integrity
 
-__These are the flows where if they break, the business stops or loses money.
+__These are the flows where if they break, the business stops or loses money.This usually results in 5–20 E2E acceptance scenarios, not 200__
 
-This usually results in 5–20 E2E acceptance scenarios, not 200.__
+== Execution tiers (label these in your CI):
+
+. T0 Smoke (≤5–10 min): small set that proves the system is up and core user journeys are viable after each deploy.
+
+. T1 Critical path (≤30–40 min): revenue/mission-critical flows, safety/regulatory checks, key integrations (via stubs/contracts).
+
+. T2 Broader regression (scheduled nightly): lower-risk variants, edge conditions.
+
+== Practical selection workflow
+
+. Map your top 5–8 user journeys end-to-end.
+
+. For each step, mark: Impact (H/M/L) × Failure likelihood (H/M/L) × Detectability (easy/hard).
+
+. Start with H-impact × (H/M) likelihood × hard-to-detect—those become T0/T1 acceptance specs.
+
+. Convert the rest into component/contract tests unless they’re truly cross-cutting risks.
 
 == Purpose
 Map behaviors to the *lowest-cost layer* that proves them. Prevent E2E bloat; maximize fast coverage at unit/contract/integration layers.
