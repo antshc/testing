@@ -1,0 +1,177 @@
+= Integrating Automated Acceptance (E2E) Tests into Your Test Plan
+:toc:
+:toclevels: 3
+:icons: font
+
+== Why (Goal)
+
+Automated acceptance tests act as *executable specifications* of externally observable behaviour. They reduce manual QA effort before release, shorten feedback loops, and raise release confidence by verifying that a deployable candidate meets business expectations in a *production-like* environment.
+
+== Where They Fit in the Pipeline
+
+[cols="25,35,40",options="header"]
+|===
+| Stage | Purpose | Gate/Notes
+| Commit → Unit & Component | Fast feedback for code correctness and design seams | Must finish in minutes
+| Build Candidate → *Acceptance (E2E)* | Validate externally visible behaviour, deployability, configuration, and critical integrations in a prod-like env | *Release gate*: any red = stop & fix
+| Post-Deploy Smoke | Sanity of the live target env after rollout | Ultra-short, critical path only
+|===
+
+== Test Plan Inserts (drop these into your Test Plan)
+
+*Scope & Intent*: Acceptance tests specify *what* the system must do from a user’s perspective in a production-like setting.
+
+*Ownership*: Developers keep acceptance tests green; anyone may author scenarios/specs. QA collaborates on risks, data, and observability.
+
+*Environment*: Run against production-like infrastructure (build, config, flags, secrets, networking). Validate deploy + config + dependencies.
+
+*Feedback Target*: The acceptance stage finishes within **≤ 60 minutes** (parallelized). Optimize continuously.
+
+*Isolation Strategy*: Per-test users/data via *functional aliasing*; parallel execution by default; idempotent setup/teardown.
+
+*Data Management*: Synthetic, minimal, precisely controlled data. No raw production dumps.
+
+*Non-Goals / Anti-Patterns*: No UI record-and-playback. Avoid mega E2E spanning systems you don’t control. Prefer contracts at boundaries.
+
+*Release Policy*: Any failing acceptance test *blocks* the release candidate (discard and fix). No “known red” allowed.
+
+== Execution Tiers (tag & schedule)
+
+* *T0 — Smoke (≤ 5–10 min):* Liveness + one happy-path per critical journey.
+* *T1 — Critical Path (≤ 30–40 min):* Money/data/regulatory flows; error paths; key integrations (stubbed/failure-injected).
+* *T2 — Regression (nightly):* Broader variants and edges with lower risk/impact.
+
+== How to Choose What to Cover (Impact–Risk Matrix)
+
+. List your top *5–8* user journeys end-to-end.
+. For each journey step, score:
+.. *Impact:* High / Medium / Low
+.. *Likelihood of failure:* High / Medium / Low
+.. *Detectability:* Easy / Hard (in prod)
+. Prioritize scenarios that are:
+.. *High-impact* × (High/Medium) likelihood × *Hard to detect* → T0/T1 acceptance specs.
+. Push the rest down to:
+.. *Contract tests* at service boundaries.
+.. *Component tests* for logic and edge cases.
+
+=== “Do” (Good Candidates)
+
+* Business-outcome checks that express *what*, not UI mechanics.
+* Critical money/data/compliance flows (checkout, sign-up, restore, SLA guarantees).
+* Deploy/config differences (feature flags, tenants, regions).
+* Top incident classes converted into executable specs.
+* Failure modes you must tolerate (timeouts, bad payloads, downstream partial outages).
+
+=== “Don’t” (Avoid or Replace)
+
+* Fragile click-through scripts tied to selectors/XPaths.
+* Full cross-organization chains you cannot control. Use *contract tests* at your boundary + stubs/failure injection for the rest.
+* Stateful tests that share users or data across cases (flake factory).
+
+== Make E2E Tests Worth Trusting
+
+=== Design for Robustness & Speed
+
+* *Prod-like environment* validation (deployability + configuration + dependencies).
+* *Isolation everywhere*: per-test identities, unique resource aliases, deterministic seeds; enable horizontal parallelism.
+* *Deterministic clocks & data*: freeze time when feasible; avoid shared mutable state.
+* *Failure injection*: simulate upstream/downstream errors, latency, malformed data—without relying on external systems being up.
+* Keep the acceptance stage *≤ 60 min* via sharding/parallel workers.
+
+=== Operational Policies
+
+* *Red = Stop the line*: any failing acceptance test blocks the candidate.
+* *Zero-flakiness standard*: detect flake, quarantine with a ticket, fix within SLA; do not normalize retries as “green”.
+* *Spec versioning*: tie specs to features/releases so “green” describes how prod behaves *now*.
+* *Measure*: failure rate, time-to-diagnose, quarantined tests, wall-clock time, pipeline wait %, and test data reuse rate.
+
+=== Tooling & Style
+
+* A thin *domain-language DSL* for steps (clear *what*), with drivers/adapters per channel (REST/GraphQL/UI/Queue) encapsulating the *how*.
+* Intent-level assertions (e.g., “Order confirmed with total”) rather than CSS trivia.
+* One place to update when protocols or UI change (adapter/driver).
+
+== Minimal Acceptance Test Architecture (template)
+
+[plantuml, acceptance-arch, png]
+----
+@startuml
+skinparam monochrome true
+rectangle "Acceptance Suite" {
+  component "Domain Step DSL" as DSL
+  component "Test Data Factory\n(aliases, seeds)" as Data
+  component "Clock/Time Controls" as Time
+  component "Failure Injector\n(stubs/mocks, chaos)" as FI
+  component "Artifacts\n(logs, traces, screenshots)" as Art
+}
+package "Adapters / Drivers" {
+  [REST/GraphQL Driver]
+  [UI Driver]
+  [Queue/Message Driver]
+}
+node "SUT in Prod-like Env" as SUT
+DSL --> [REST/GraphQL Driver]
+DSL --> [UI Driver]
+DSL --> [Queue/Message Driver]
+Data --> SUT
+Time --> SUT
+FI --> SUT
+[REST/GraphQL Driver] --> SUT
+[UI Driver] --> SUT
+[Queue/Message Driver] --> SUT
+DSL --> Art
+@enduml
+----
+
+== Decision Workflow (from backlog to pipeline)
+
+. For each new feature:
+.. Write the acceptance spec first (executable “definition of done”).
+.. Identify boundaries → add/extend *contract tests* there.
+.. Design data via factories/aliasing; define teardown/idempotency.
+.. Decide tier: `smoke`, `critical-path`, or `regression`.
+.. Add negative/failure-mode cases *where impact is high*.
+. Enforce the time budget (parallelize or split if needed).
+. Capture artifacts (logs, HAR, traces, screenshots) for fast diagnosis.
+. Track metrics and prune low-signal tests monthly.
+
+== Example Checklists
+
+=== Per-Feature Acceptance Readiness
+
+- [ ] Acceptance spec expresses *what*, not *how*.
+- [ ] Runs against prod-like env; validates deploy + config.
+- [ ] Test data via factories with per-test aliases (no shared users/records).
+- [ ] External dependencies covered by *contract tests*; acceptance uses stubs/failure injection as needed.
+- [ ] Parallel by default; stable across *100 consecutive runs*.
+- [ ] Tagged: `smoke` / `critical-path` / `regression`.
+- [ ] Stage completes within target time budget.
+
+=== Suite Health (Weekly)
+
+- [ ] No quarantined tests older than SLA.
+- [ ] Flake rate < target (e.g., < 0.5%).
+- [ ] Top 3 slow tests addressed or justified.
+- [ ] Metrics reviewed; candidates for demotion/removal identified.
+
+== Roles & Responsibilities
+
+*Engineering*: Author/maintain specs & adapters; fix reds immediately; keep suite fast and deterministic.  
+*QA/Quality*: Curate risk model, data sets, observability; facilitate failure-mode discovery; steward metrics & pruning.  
+*Ops/Platform*: Provide stable prod-like envs, feature-flag plumbing, secrets management, and parallel execution capacity.  
+*Product*: Align scenarios with business value; accept/reject on spec outcomes.
+
+== FAQ
+
+*How do we choose UI vs API?* +
+Prefer API or service-level steps for most checks. Keep a *thin* UI layer: a smoke path and a few critical UI behaviours.
+
+*How do we test external systems we don’t own?* +
+At the *boundary*, use contract tests to verify protocol/shape. In acceptance, use stubs/failure injection to simulate behaviours and errors.
+
+*Do we cover bugs with acceptance tests? Separate test or extend existing?* +
+If the bug violates an *observable behaviour*, extend the *existing* relevant spec (keeps intent centralized). Add a new spec only when it represents a *new* business rule or journey.
+
+== Summary (TL;DR)
+
+*Place acceptance tests as a release gate in a prod-like env;* select scenarios by *impact × likelihood × detectability;* keep them *fast, isolated, deterministic;* and run with *zero-flake discipline*. Do less manual QA by making the suite a *trusted, executable specification* of how the system must behave.
