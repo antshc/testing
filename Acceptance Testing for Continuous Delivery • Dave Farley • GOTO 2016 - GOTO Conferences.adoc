@@ -16,6 +16,7 @@ Dave Farley • GOTO 2016
 * *Don’t* let every test start and initialize the app.  
   Optimise for **Cycle-Time** — be efficient in using test environments.
 * *Don’t* include systems **outside your control** in your Acceptance Test scope.
+* *Don't* Full end-to-end tests across multiple systems, they prevent precise control of state.
 * *Don’t* put `wait()` instructions in tests hoping it will solve intermittency.
 
 ---
