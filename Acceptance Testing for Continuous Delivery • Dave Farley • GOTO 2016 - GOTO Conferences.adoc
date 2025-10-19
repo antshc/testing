@@ -31,7 +31,7 @@ Dave Farley • GOTO 2016
 * *Do* use the **language of the problem domain** — adopt the DSL approach regardless of technology.  
 * *Do* **stub external systems**.  
 * *Do* test in **production-like environments** (Use production like configurations etc...).  
-* *Do* make instructions appear **synchronous at the test-case level**.  
+* *Do* make instructions appear **synchronous at the test-case level** (do not wait for an async message from the queue, make it synchronous).  
 * *Do* test for **any change**.  
 * *Do* keep your tests **efficient**.
 
