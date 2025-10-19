@@ -1,0 +1,76 @@
+= Strategy to Reduce Manual QA via Executable Scenarios
+:toc:
+:icons: font
+:sectnums:
+
+== Objective
+Drive manual regression to near-zero by making the automated suite a trustworthy, fast, and representative specification of business behavior.
+
+== Key Moves
+. **Unify scenarios**: one catalog; route by tag (`@unit`, `@contract`, `@integration`, `@e2e`).
+. **Shrink E2E**: keep 5–20 high-signal journeys; thin UI presence checks for compliance only.
+. **Fortify Unit/Contract/Integration**: exhaustive parameterized coverage for validations and contracts.
+. **Budget time**: acceptance stage ≤ 60 minutes end-to-end.
+. **Zero-flake policy**: quarantine + SLA; do not normalize retries as “green.”
+. **Traceability**: spec id → implementation → report link.
+. **Monthly pruning**: remove or demote low-signal tests.
+
+== Roles & Responsibilities
+[cols="22,38,40",options="header"]
+|===
+| Role | Responsibilities | Deliverables
+| Engineering | Author specs; implement at lowest layer; keep suite green & fast | Unit/contract/integration tests; adapters; reports
+| QA | Curate risk model; review coverage; drive flake triage; exploratory testing | Risk register; validation trace; flake backlog
+| Platform/DevOps | Prod-like envs; parallel capacity; artifacts & observability | IaC, parallel shards, logs/traces
+| Product | Prioritize journeys; accept on spec outcomes | Critical path list; acceptance criteria
+|===
+
+== Metrics & Targets
+[cols="28,18,54",options="header"]
+|===
+| Metric | Target | Rationale
+| Flake rate (E2E) | < 0.5% | Keeps trust high
+| Acceptance wall-clock | ≤ 60 min | Ship daily with confidence
+| Coverage (validation modules) | ≥ 90% lines/branches | Proof of exhaustiveness at unit level
+| Mutation (validation modules) | ≥ 70% | Guards against weak assertions
+| Quarantine age | ≤ 7 days | Forces stabilization
+| Incidents converted to specs | 100% | Prevent recurrence
+|===
+
+== Playbook (12-Week Rollout)
+. **Week 1–2**: Inventory journeys, validations, contracts; create spec IDs and tags.
+. **Week 3–4**: Build validation unit matrices; set coverage/mutation gates.
+. **Week 5–6**: Add/verify contract tests; wire Pact/WireMock; provider CI.
+. **Week 7–8**: Implement T0/T1 E2E; parallelize; add artifacts/observability.
+. **Week 9–10**: Demote redundant E2E to integration/unit; institute budgets.
+. **Week 11–12**: Stabilize; set flake SLA; start monthly pruning review.
+
+== Templates
+=== Validation Scenario (Unit)
+```adoc
+= <Rule Title>
+:spec:id: VAL-XXX
+:spec:layer: unit
+:spec:tags: @unit,@validation
+
+== Scenario
+<business statement of the rule>
+
+.Examples
+|===
+| input | expected | note
+| ...   | ...      | ...
+|===
+```
+=== E2E Scenario (Critical Journey)
+```adoc
+= <Journey Title>
+:spec:id: E2E-XXX
+:spec:layer: e2e
+:spec:tags: @e2e,@critical
+
+== Scenario
+Given <precondition>
+When <user does X>
+Then <business outcome Y> (incl. persistence/side-effects)
+```
