@@ -34,6 +34,7 @@ Dave Farley • GOTO 2016
 * *Do* make instructions appear **synchronous at the test-case level** (do not wait for an async message from the queue, make it synchronous).  
 * *Do* test for **any change**.  
 * *Do* keep your tests **efficient**.
+* *Do* Shift-left testing: collaborate during backlog grooming to write executable acceptance criteria before coding.
 
 == Test Environment Types
 
