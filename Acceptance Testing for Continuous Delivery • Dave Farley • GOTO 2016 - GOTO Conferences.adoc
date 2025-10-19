@@ -24,7 +24,7 @@ Dave Farley • GOTO 2016
 
 * *Do* ensure that **developers own the tests**.  
 * *Do* focus your tests on **“What” not “How”**.  
-* *Do* think of your tests as **Executable Specifications**.  
+* *Do* think of your tests as **Executable Specifications**. They define, in machine-verifiable form, what “done” means from a user’s perspective, not a developer’s  
 * *Do* make acceptance testing part of your **Definition of Done**.  
 * *Do* keep tests **isolated from one another**.  
 * *Do* keep your tests **repeatable**.  
