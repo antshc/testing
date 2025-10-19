@@ -1,5 +1,5 @@
 = Acceptance Testing for Continuous Delivery
-Dave Farley • GOTO 2016
+Dave Farley • GOTO 2016 Youtube: https://www.youtube.com/watch?v=SBhgteA2szg
 :doctype: presentation
 :toc: left
 :toclevels: 2
