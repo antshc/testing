@@ -6,6 +6,23 @@
 == Purpose
 Map behaviors to the *lowest-cost layer* that proves them. Prevent E2E bloat; maximize fast coverage at unit/contract/integration layers.
 
+== Non-Negotiable Principles
+
+. **One scenario = one intent.**  
+Describe the *what* once; implement it in exactly one test layer — always the *lowest layer that can fully prove the behavior*.
+
+. **Tag-driven routing.**  
+Use tags such as `@unit`, `@contract`, `@integration`, `@e2e`, `@smoke`, and `@critical`. The CI pipeline uses these tags to decide which runner executes each scenario.
+
+. **No duplication across layers.**  
+If a behavior is already guaranteed by *unit*, *contract*, or *integration* tests, do **not** repeat the same branches in E2E. The E2E layer contains only a thin set of *business-critical journeys*.
+
+. **Examples-as-data.**  
+Validations and rule matrices belong in **parameterized unit tests** using examples tables — *not* in E2E scenarios.
+
+. **Living documentation.**  
+The scenario specification is the *single source of truth*. Automation and CI reports link back to this specification so the documentation always reflects reality.
+
 == Target Distribution (Guideline)
 [cols="30,20,25,25",options="header"]
 |===
