@@ -159,7 +159,7 @@ Acceptance tests depend on *business intent*, not *interface mechanics*.
 > “Each test must be isolated from others, and rerunning it should yield identical results.”
 
 ==== Key Techniques
-* **Functional aliasing:** dynamically generate unique entities (users, IDs, etc.) per test run.
+* **Functional aliasing:** dynamically generate unique entities (users, IDs, etc.) per test run. Example: User("John") - Value behind John-1d2Ad.
 * **Controlled state:** avoid shared environments or test data.
 * **Parallel execution:** enable concurrency safely.
 
