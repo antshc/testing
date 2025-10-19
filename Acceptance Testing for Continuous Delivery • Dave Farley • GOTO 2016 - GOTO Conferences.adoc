@@ -36,6 +36,7 @@ Dave Farley • GOTO 2016
 * *Do* test for **any change**.  
 * *Do* keep your tests **efficient**.
 * *Do* Shift-left testing: collaborate during backlog grooming to write executable acceptance criteria before coding.
+* *Do* Make acceptance tests **living documentation** — always up-to-date, always verified, and impossible to misinterpret. 
 
 == Test Environment Types
 
