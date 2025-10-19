@@ -1,0 +1,57 @@
+= Test Plan Matrix: What Goes Where
+:toc:
+:icons: font
+:sectnums:
+
+== Purpose
+Map behaviors to the *lowest-cost layer* that proves them. Prevent E2E bloat; maximize fast coverage at unit/contract/integration layers.
+
+== Target Distribution (Guideline)
+[cols="30,20,25,25",options="header"]
+|===
+| Layer | Share of Automated Tests | Typical Duration | Confidence Role
+| Unit | 70–80% | milliseconds | Rules, validation, pure logic
+| Contract | 5–10% | seconds | API shapes, error semantics at boundaries
+| Integration | 10–15% | seconds–minutes | Service+DB workflows in isolation
+| E2E Acceptance | 3–7% (5–20 scenarios) | minutes | User journeys & deploy/config sanity
+|===
+
+== Decision Matrix
+[cols="30,35,15,20",options="header"]
+|===
+| Behavior Type | Example | Layer | Why
+| Field validation | qty range, email format | Unit | Exhaustive, parameterized, fast
+| Cross-field simple | start <= end | Unit | Deterministic matrix
+| Domain rule (no I/O) | price calc, tax rule | Unit | Pure function
+| DB-backed rule | stock reservation | Integration | Needs persistence seam
+| External API contract | payment 4xx/5xx semantics | Contract | Boundary guarantees
+| Workflow across services | create→validate→persist | Integration | End-to-end inside system boundary
+| Full user journey | login→buy→invoice | E2E | Business outcome & config
+| Compliance UX presence | age gate visible | E2E (spot) | Thin UI check only
+|===
+
+== Risk Model → Layer
+[cols="22,22,22,34",options="header"]
+|===
+| Impact | Likelihood | Detectability in Prod | Layer
+| High | High/Med | Hard | E2E or Integration (prefer Integration if UI not essential)
+| High | Med/Low | Easy | Integration or Contract
+| Med | Med/Low | Easy | Unit or Contract
+| Low | Any | Any | Unit (or omit if redundant)
+|===
+
+== Example Mapping (Fill This Table)
+[cols="14,12,18,28,28",options="header"]
+|===
+| Spec ID | Layer | Source Spec | Implementation | CI Report URL
+| VAL-002 | unit | specs/validations-cart.adoc | QuantityValidatorTests.* | (link)
+| TAX-014 | unit | specs/tax-rules.adoc | TaxCalculatorTests.* | (link)
+| PAY-CT-101 | contract | specs/payment-contract.adoc | Payment.Pact.cs | (link)
+| ORD-INT-020 | integration | specs/order-workflow.adoc | OrderWorkflowTests.* | (link)
+| E2E-CHK-001 | e2e | specs/checkout-e2e.adoc | checkout.spec.ts | (link)
+|===
+
+== Promotion/Demotion Rules
+* Move **down** the pyramid whenever a lower layer can prove the same behavior.
+* Move **up** only when incidents show gaps or when deploy/config is integral to the risk.
+* Every new E2E must include a removal or justification.
